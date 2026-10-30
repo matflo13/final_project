@@ -8,13 +8,15 @@
       - Jumping with gravity
       - Floor Collisions
     Design pixel art character    
+  SOURCES:
+    CraftPix.net for robot assets
 */
 
 PImage player;
 PImage spike;
 PImage ground;
 int playerX = 360;
-int playerY = 370;
+int playerY = 320;
 int playerDir = 90;
 int spikeX = 720;
 int spikeY = 385;
@@ -27,7 +29,7 @@ int groundAnimTick;
 int level; // Level 1: Grass | Level 2: Underground
 void setup() {
   size(720, 540);
-  player = loadImage("player_90_0.png");
+  player = loadImage("player90-walk-0.png");
   spike = loadImage("spike.png");
   ground = loadImage("ground_1.png");
   imageMode(CENTER);
@@ -36,7 +38,7 @@ void draw() {
   background(121, 26, 67);
   fill(64, 5, 18);
   //rect(0, 400, 720, 170);
-  image(player, playerX, playerY, 128, 128);
+  image(player, playerX, playerY, 256, 256);
   image(ground, 512 - (groundAnimTick * 4), 92, 1024, 1024);
   
   // TICK PLAYER MOVEMENT
@@ -47,8 +49,8 @@ void draw() {
   playerX -= 1;
   
   // FLOOR COLLISIONS
-  if (playerY >= 380) { // If the player is touching the ground:
-    while (playerY >= 380) { // Reset gravity and lift the player until the player isn't touching the ground.
+  if (playerY >= 285) { // If the player is touching the ground:
+    while (playerY >= 285) { // Reset gravity and lift the player until the player isn't touching the ground.
       gravity = 0; // Set gravity to 0
       playerY -= 1; // Move the player up by 1y.
     }
@@ -67,7 +69,14 @@ void draw() {
     Instead of loading the image right at the start, I do it every frame, while updating 
     the frame number so that the animation updates on the screen.
   */
-  player = loadImage("player_" + playerDir + "_" + playerAnimTick + ".png");
+  
+  if (keyPressed == true && (key == 'a' || key == 'd')) {
+    player = loadImage("player" + playerDir + "-walk-" + playerAnimTick + ".png");
+    println(keyPressed);
+  } else if (keyPressed == false) {
+    player = loadImage("player" + playerDir + "-idle-" + playerAnimTick + ".png");
+  }
+  
   spike = loadImage("spike_" + spikeAnimTick + ".png");
   
   // SPIKE SPAWNING
