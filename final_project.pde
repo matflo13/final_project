@@ -3,84 +3,198 @@
   Final Processing Project
   Game Idea: Platformer/Geometry Dash
   TODO: 
-    Make a basic platforming engine with:
-      - Left/right movement
-      - Jumping with gravity
-      - Floor Collisions
-    Design pixel art character    
+    Fix attacking animation   
   SOURCES:
-    CraftPix.net for robot assets
+    Primitive Pixels Games on itch.io for player assets
+    I made all other pixel art
 */
 
 PImage player;
 PImage spike;
 PImage ground;
+PImage platform;
 int playerX = 360;
 int playerY = 320;
 int playerDir = 90;
+float playerMomentum = 0;
+int playerWidth = 32;
+int playerHeight = 32;
+boolean isJumping = false;
+boolean isAttacking = false;
+boolean touchingGround = false;
 int spikeX = 720;
 int spikeY = 385;
 boolean spikeSpawned = false;
+int platformX = 900;
+int platformY = 368;
+int platformWidth = 180;
+int platformHeight = 30;
 int gravity = 0;
 int animTick; // Global tick variable for everything in the game
 int playerAnimTick; // Animation tick for the player
+int playerAnimLength = 10; // Length of the animation cycle that the player is currently using.
 int spikeAnimTick; // Animation tick for spikes
 int groundAnimTick;
 int level; // Level 1: Grass | Level 2: Underground
+int groundHeight = 432;
 void setup() {
-  size(720, 540);
-  player = loadImage("player90-walk-0.png");
+  size(900, 540);
+  player = loadImage("Player/Run/player_run_90_0.png");
   spike = loadImage("spike.png");
   ground = loadImage("ground_1.png");
+  platform = loadImage("platform_1.png");
   imageMode(CENTER);
 }
 void draw() {
-  background(121, 26, 67);
+  background(41, 12, 31);
   fill(64, 5, 18);
-  //rect(0, 400, 720, 170);
-  image(player, playerX, playerY, 256, 256);
-  image(ground, 512 - (groundAnimTick * 4), 92, 1024, 1024);
+  if (isAttacking == true) {
+    image(player, playerX, playerY, 180, 90);
+  } else {
+    image(player, playerX, playerY, 60, 60);
+  }
+  image(ground, 512 - (groundAnimTick * 2), 32, 1024, 1024);
+  image(platform, platformX, platformY, 180, 30);
+  fill(255, 255, 255);
+  //rect(playerX - (playerWidth / 2), playerY - (playerHeight / 2), playerWidth, playerHeight); (PLAYER HITBOX) 
+  //rect(platformX - (platformWidth / 2), platformY - (platformHeight / 2), platformWidth, platformHeight); (PLATFORM HITBOX)
   
-  // TICK PLAYER MOVEMENT
-  // playerX += playerDir / 18;
+  // TICK SCROLLING
+  playerX -= 1; // Always moves the player to the left slowly to keep up with the scrolling ground.
+  platformX -= 1; // Same for the floating platform.
+  
   // GRAVITY
   gravity += 1; // Player falls faster the longer they are in the air.
   playerY += gravity; // Updates the player's y value by gravity.
-  playerX -= 1;
   
-  // FLOOR COLLISIONS
-  if (playerY >= 285) { // If the player is touching the ground:
-    while (playerY >= 285) { // Reset gravity and lift the player until the player isn't touching the ground.
+  // GROUND COLLISIONS
+  if (playerY >= groundHeight) { // If the player is touching the ground:
+    touchingGround = true;
+    isJumping = false; // Player is not jumping.
+    while (playerY >= groundHeight) { // Reset gravity and lift the player until the player isn't touching the ground.
       gravity = 0; // Set gravity to 0
       playerY -= 1; // Move the player up by 1y.
     }
   }
   
+  // PLATFORM COLLISIONS
+  int feet = playerY + (playerHeight / 2);
+  int head = playerY - (playerHeight / 2);
+  int left = playerX - (playerWidth / 2);
+  int right = playerX - (playerWidth / 2);
+  int platformBottom = platformY + (platformHeight / 2);
+  int platformTop = platformY - (platformHeight / 2);
+  int platformLeft = platformX - (platformWidth / 2) - 32;
+  int platformRight = platformX + (platformWidth / 2);
+  
+  //rect(left, head, playerWidth, playerHeight); 
+  //rect(platformLeft, platformTop, platformWidth, platformHeight);
+  //if ((feet > platformTop) && (right > platformLeft) && (left < platformRight) && (head < platformBottom)) {
+   // println("collision");
+ // }
+  if ((feet > platformTop) && (right > platformLeft) && (left < platformRight) && (gravity > 0)) {
+    touchingGround = true;
+    isJumping = false; // Player is not jumping.
+    if (key != 's') {
+      if (feet >= platformTop) { // Reset gravity and lift the player until the player isn't touching the ground.
+        gravity = 0; // Set gravity to 0
+        playerY -= 1; // Move the player up by 1y.
+      } 
+    }
+  }
+  
+  // MOVEMENT CONTROLS
+  //I did movement in the draw loop since the keyPressed function was giving a delay when a key was clicked.
+  if ((keyPressed == true && key == 'w') && (touchingGround == true)) {
+    gravity -= 17;
+    isJumping = true; // Player is now jumping.
+    touchingGround = false;
+  }
+  
+  /*if (isJumping == false) {
+    if ((keyPressed == true && key == 'a')) {
+      playerDir = -90;
+      playerMomentum = -8;
+    } else if ((keyPressed == true && key == 'd')) {
+      playerDir = 90;
+      playerMomentum = 8;
+    } else {
+      playerMomentum = 0;
+    }*/
+    
+    if (isJumping == false) {
+    if ((keyPressed == true && key == 'a')) {
+      playerDir = -90;
+      if (playerMomentum > -6) {
+        playerMomentum -= 1;
+      }
+    } else if ((keyPressed == true && key == 'd')) {
+      playerDir = 90;
+      if (playerMomentum < 8) {
+        playerMomentum += 1;
+      }
+    } else if (abs(playerMomentum) < 0.5) {
+      playerMomentum = 0;
+    }
+  }
+  
+  playerX += playerMomentum;
+  if (isJumping == false) {
+    playerMomentum = playerMomentum * 0.8;
+  }
   // ANIMATIONS
   /* 
     playerAnimTick sets the frame of the animation to display the player at. It's done using the millis() function, dividing it by 4 to slow 
     it down, and using modulus 4 (% 4) to make it constantly cycle through 4 values.
   */
   animTick = millis() / 4;
-  playerAnimTick = animTick % 4; 
-  spikeAnimTick = ((animTick / 4) % 16); 
-  groundAnimTick = (animTick / 16 % 16) + 1;
+  playerAnimTick = (animTick / 16) % playerAnimLength; 
+  spikeAnimTick = (animTick / 4) % 16; 
+  groundAnimTick = (animTick / 9 % 16) + 1;
   /*
     Instead of loading the image right at the start, I do it every frame, while updating 
     the frame number so that the animation updates on the screen.
   */
   
-  if (keyPressed == true && (key == 'a' || key == 'd')) {
-    player = loadImage("player" + playerDir + "-walk-" + playerAnimTick + ".png");
-    println(keyPressed);
-  } else if (keyPressed == false) {
-    player = loadImage("player" + playerDir + "-idle-" + playerAnimTick + ".png");
-  }
+  if (keyPressed == true && (key == 'a' || key == 'd' || keyCode == 37 || keyCode == 39) && gravity == 0 && isAttacking != true) {
+    if (playerAnimTick > 9) {
+      playerAnimTick = 0;
+    }
+    playerAnimLength = 10;
+    player = loadImage("Player/Run/player_run_" + playerDir + "_" + playerAnimTick + ".png");
+  } else if (gravity > 0) {
+    if (playerAnimTick > 9) {
+      playerAnimTick = 0;
+    }
+    playerAnimLength = 10;
+    player = loadImage("Player/Fall/player_fall_" + playerDir + "_" + playerAnimTick + ".png");
+  } else if (gravity < 0) {
+    if (playerAnimTick > 12) {
+      playerAnimTick = 0;
+    }
+    playerAnimLength = 13;
+    player = loadImage("Player/Jump/player_jump_" + playerDir + "_" + playerAnimTick + ".png");
+  } else if (isAttacking == true) {
+    if (playerAnimTick > 7) {
+      playerAnimTick = 0;
+    }
+    playerAnimLength = 8;
+    player = loadImage("Player/Attack/player_attack_" + playerDir + "_" + playerAnimTick + ".png");
+  } else {
+    playerAnimLength = 24;
+    player = loadImage("Player/Idle/player_idle_" + playerDir + "_" + playerAnimTick + ".png");
+  } 
   
   spike = loadImage("spike_" + spikeAnimTick + ".png");
   
+  // PLATFORM SPAWNING
+  
+  if (platformX < -160) {
+    platformX = 1000;
+    platformY = int(random(336, 400));
+  }
   // SPIKE SPAWNING
-  if ((random(1, 10) == 1)) {
+  /*if ((random(1, 10) == 1)) {
     spikeSpawned = true;
     spawnSpike();
   }
@@ -88,19 +202,17 @@ void draw() {
   if (spikeSpawned = true) {
     image(spike, spikeX, spikeY, 96, 96);
     spikeX -= 5;
-  }
+  } */
+  
+  
 }
-void keyPressed() {
-  if (key == 'a') {
-    playerDir = -90;
-    playerX -= 8;
-  } else if (key == 'd') {
-    playerDir = 90;
-    playerX += 8;
-  }
-  if (key == 'w') {
-    gravity -= 15;
-  }
+
+void mousePressed() {
+  isAttacking = true;
+}
+
+void mouseReleased() {
+  isAttacking = false;
 }
 
 void spawnSpike() {
