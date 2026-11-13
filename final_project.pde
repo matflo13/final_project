@@ -6,6 +6,7 @@
     Fix attacking animation   
   SOURCES:
     Primitive Pixels Games on itch.io for player assets
+    https://admurin.itch.io/enemy-golem for enemy assets
     I made all other pixel art
 */
 
@@ -13,6 +14,10 @@ PImage player;
 PImage spike;
 PImage ground;
 PImage platform;
+PImage enemy;
+PImage effect;
+int enemyX = 600;
+int enemyY = 414;
 int playerX = 360;
 int playerY = 320;
 int playerDir = 90;
@@ -22,6 +27,7 @@ int playerHeight = 32;
 boolean isJumping = false;
 boolean isAttacking = false;
 boolean touchingGround = false;
+int offset = 64;
 int spikeX = 720;
 int spikeY = 385;
 boolean spikeSpawned = false;
@@ -35,32 +41,44 @@ int playerAnimTick; // Animation tick for the player
 int playerAnimLength = 10; // Length of the animation cycle that the player is currently using.
 int spikeAnimTick; // Animation tick for spikes
 int groundAnimTick;
-int level; // Level 1: Grass | Level 2: Underground
-int groundHeight = 432;
+int enemyAnimTick;
+int enemyDir = 90;
+float enemyMomentum = 0;
+int enemyHealth = 100;
+int enemyDamageTick = 0;
+int groundHeight = 423;
 void setup() {
   size(900, 540);
   player = loadImage("Player/Run/player_run_90_0.png");
   spike = loadImage("spike.png");
   ground = loadImage("ground_1.png");
   platform = loadImage("platform_1.png");
+  enemy = loadImage("Enemy/Golem/Run/enemy_run_90_0.png");
+  effect = loadImage("Player/FX/attack_effect_90_0.png");
   imageMode(CENTER);
+  textAlign(CENTER);
+  textSize(20);
 }
 void draw() {
-  background(41, 12, 31);
-  fill(64, 5, 18);
+  background(61, 17, 41);
+  fill(250, 250, 250);
   if (isAttacking == true) {
-    image(player, playerX, playerY, 180, 90);
+    image(player, playerX, playerY, 100, 100);
+    image(effect, playerX + offset, playerY, 128, 100);
   } else {
     image(player, playerX, playerY, 60, 60);
   }
+  image(enemy, enemyX, enemyY, 128, 128);
   image(ground, 512 - (groundAnimTick * 2), 32, 1024, 1024);
   image(platform, platformX, platformY, 180, 30);
+  text(enemyHealth, enemyX, enemyY - 32);
   fill(255, 255, 255);
   //rect(playerX - (playerWidth / 2), playerY - (playerHeight / 2), playerWidth, playerHeight); (PLAYER HITBOX) 
   //rect(platformX - (platformWidth / 2), platformY - (platformHeight / 2), platformWidth, platformHeight); (PLATFORM HITBOX)
   
   // TICK SCROLLING
   playerX -= 1; // Always moves the player to the left slowly to keep up with the scrolling ground.
+  enemyX -= 1; // Same for enemies.
   platformX -= 1; // Same for the floating platform.
   
   // GRAVITY
@@ -110,37 +128,28 @@ void draw() {
     isJumping = true; // Player is now jumping.
     touchingGround = false;
   }
-  
-  /*if (isJumping == false) {
-    if ((keyPressed == true && key == 'a')) {
-      playerDir = -90;
-      playerMomentum = -8;
-    } else if ((keyPressed == true && key == 'd')) {
-      playerDir = 90;
-      playerMomentum = 8;
-    } else {
-      playerMomentum = 0;
-    }*/
     
-    if (isJumping == false) {
-    if ((keyPressed == true && key == 'a')) {
-      playerDir = -90;
-      if (playerMomentum > -6) {
-        playerMomentum -= 1;
+  if (isJumping == false || gravity > 0) {
+    if (isAttacking == false) {
+      if ((keyPressed == true && key == 'a')) {
+        playerDir = -90;
+        if (playerMomentum > -8) {
+          playerMomentum -= 1;
+        }
+      } else if ((keyPressed == true && key == 'd')) {
+        playerDir = 90;
+        if (playerMomentum < 8) {
+          playerMomentum += 1;
+        }
+      } else if (abs(playerMomentum) < 0.5) {
+        playerMomentum = 0;
       }
-    } else if ((keyPressed == true && key == 'd')) {
-      playerDir = 90;
-      if (playerMomentum < 8) {
-        playerMomentum += 1;
-      }
-    } else if (abs(playerMomentum) < 0.5) {
-      playerMomentum = 0;
     }
   }
   
   playerX += playerMomentum;
   if (isJumping == false) {
-    playerMomentum = playerMomentum * 0.8;
+    playerMomentum = playerMomentum * 0.87;
   }
   // ANIMATIONS
   /* 
@@ -160,27 +169,33 @@ void draw() {
     if (playerAnimTick > 9) {
       playerAnimTick = 0;
     }
+    offset = 0;
     playerAnimLength = 10;
     player = loadImage("Player/Run/player_run_" + playerDir + "_" + playerAnimTick + ".png");
   } else if (gravity > 0) {
     if (playerAnimTick > 9) {
       playerAnimTick = 0;
     }
+    offset = 0;
     playerAnimLength = 10;
     player = loadImage("Player/Fall/player_fall_" + playerDir + "_" + playerAnimTick + ".png");
   } else if (gravity < 0) {
     if (playerAnimTick > 12) {
       playerAnimTick = 0;
     }
+    offset = 0;
     playerAnimLength = 13;
     player = loadImage("Player/Jump/player_jump_" + playerDir + "_" + playerAnimTick + ".png");
   } else if (isAttacking == true) {
     if (playerAnimTick > 7) {
       playerAnimTick = 0;
     }
+    offset = (playerDir / 90 * 64);
     playerAnimLength = 8;
     player = loadImage("Player/Attack/player_attack_" + playerDir + "_" + playerAnimTick + ".png");
+    effect = loadImage("Player/FX/attack_effect_" + playerDir + "_" + playerAnimTick + ".png");
   } else {
+    offset = 0;
     playerAnimLength = 24;
     player = loadImage("Player/Idle/player_idle_" + playerDir + "_" + playerAnimTick + ".png");
   } 
@@ -191,7 +206,7 @@ void draw() {
   
   if (platformX < -160) {
     platformX = 1000;
-    platformY = int(random(336, 400));
+    platformY = int(random(304, 368));
   }
   // SPIKE SPAWNING
   /*if ((random(1, 10) == 1)) {
@@ -204,11 +219,76 @@ void draw() {
     spikeX -= 5;
   } */
   
+  // ENEMY MOVEMENT
   
+  int distToPlayerX;
+  int distToPlayerY;
+  String enemyAction = "run";
+  distToPlayerX = playerX - enemyX;
+  distToPlayerY = playerY - enemyY;
+  enemyX += enemyMomentum;
+  if ((distToPlayerX < -3 || distToPlayerX > 3) && enemyDamageTick <= 0) {
+    if (distToPlayerX < 0) {
+      enemyMomentum = -2;
+      enemyDir = -90;
+      enemyAction = "run";
+    } else {
+      enemyMomentum = 4;
+      enemyDir = 90;
+      enemyAction = "run";
+    }
+  } else {
+    if ((distToPlayerY > -32 && distToPlayerY < 32) && enemyDamageTick <= 0) {
+      enemyMomentum = 0;
+      enemyAction = "attack";
+    } if (enemyDamageTick > 0) {
+      enemyAction = "damage";
+    }
+  }
+  
+  if (abs(enemyMomentum) < 0.5) {
+    enemyMomentum = 0;
+  }
+  enemyMomentum = enemyMomentum * 0.75;
+  enemyDamageTick -= 1;
+  
+  // ENEMY DAMAGE CHECK
+  
+  if (isAttacking == true) {
+    if (playerDir == -90 && distToPlayerX > 0 && distToPlayerX < 128 && playerAnimTick > 3 && playerAnimTick < 7) { // If this is true, the enemy is being attacked from the right side.
+      enemyAction = "damage";
+      enemyDir = 90;
+      enemyMomentum = -15;
+      enemyHealth -= 1;
+      enemyDamageTick = 30;
+    } else if (playerDir == 90 && distToPlayerX < 0 && distToPlayerX > -128 && playerAnimTick > 3 && playerAnimTick < 7) { // If this is true, the enemy is being attacked from the left side.
+      enemyAction = "damage";
+      enemyDir = -90;
+      enemyMomentum = 15;
+      enemyHealth-= 1;
+      enemyDamageTick = 30;
+    }
+  }
+  
+  // ENEMY ANIMATION
+  if (enemyAction == "run") {
+    enemyAnimTick = (animTick / 32) % 4;
+    enemy = loadImage("Enemy/Golem/Run/enemy" + "_run_" + enemyDir + "_" + enemyAnimTick + ".png");
+  } else if (enemyAction == "attack") {
+    enemyAnimTick = (animTick / 16) % 10;
+    enemy = loadImage("Enemy/Golem/Attack/enemy" + "_attack_" + enemyDir + "_" + enemyAnimTick + ".png");
+  } else if (enemyDamageTick > 0) {
+    enemyAnimTick = (animTick / 32) % 5; //<>//
+    enemy = loadImage("Enemy/Golem/Damage/enemy" + "_damage_" + enemyDir + "_" + enemyAnimTick + ".png");
+  }
 }
 
 void mousePressed() {
-  isAttacking = true;
+  if (isJumping == false) {
+    isAttacking = true;
+  } else {
+    isAttacking = false;
+  }
 }
 
 void mouseReleased() {
