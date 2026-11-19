@@ -352,7 +352,21 @@ void draw() {
         }
       }
     }
+         
+    // OUT OF BOUNDS CHECKS
+    if (playerX < 0) {
+      playerMomentum = 10;
+      playerHealth -= 2;
+      playSfx(hitSfx);
+      flash = -20;
+    } else if (playerX > 900) {
+      playerMomentum = -10;
+      playerHealth -= 2;
+      playSfx(hitSfx);
+      flash = -20;
+    }
     
+    // MOMENTUM CALCULATIONS
     playerX += playerMomentum;
     if (isJumping == false) {
       playerMomentum = playerMomentum * 0.87;
@@ -407,7 +421,8 @@ void draw() {
       offset = 0;
       playerAnimLength = 24;
       player = loadImage("Player/Idle/player_idle_" + playerDir + "_" + playerAnimTick + ".png");
-    } 
+    }     
+    
     // PLAYER DEATH CHECK
     
     if (playerHealth == 0) {
@@ -486,7 +501,7 @@ void draw() {
         flash = 10;
         score += 100;
         playSfx(hitSfx);
-        if (enemyHealth > 0) {
+        if (enemyHealth > 0) { //<>//
           enemyHealth-= 1;
         }
       }
@@ -501,7 +516,7 @@ void draw() {
       enemyAction = "die";
     }  
     
-     //<>//
+    
     // ENEMY ANIMATION
     if (enemyAction == "run") {
       enemyAnimTick = (animTick / 32) % 4;
@@ -520,8 +535,7 @@ void draw() {
         enemyMaxHealth += int(random(5, 10));
         enemyHealth = enemyMaxHealth;
         enemyAction = "run";
-        enemyX = int(random(-1, 1) * 900);
-        println(enemyX);
+        enemyX = (int(random(0, 1)) * 900);
       }
     }
   } else if (gameState == 2) {
@@ -554,11 +568,11 @@ void draw() {
     
     // UPDATE HIGHSCORE LIST
     if (highscoreUpdate == false) {
-      highscores.append(score);
-      highscores.sortReverse();
-      int index = highscores.index(score);
-      names.insert(index, playerName);
-      highscoreUpdate = true;
+      highscores.append(score); // Adds the score to the end of the highscore list
+      highscores.sortReverse(); // Sorts the scores in the list from highest to lowest
+      int index = highscores.index(score); // Index variable gets the list position of the current score so that the player name can be connected to the same spot in the name list
+      names.insert(index, playerName); // Inserts the player name at the same position as their score
+      highscoreUpdate = true; // Sets the value to false so that it only updates one time when you die
     }
     
     // RESET VARIABLES
