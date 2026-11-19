@@ -49,6 +49,7 @@ boolean startAttack = false;
 boolean isJumping = false;
 boolean isAttacking = false;
 boolean touchingGround = false;
+String playerName;
 
 // Enemy Variables
 int enemyX = 900;
@@ -99,6 +100,7 @@ int score = 0;
 
 // Highscore List
 IntList highscores = new IntList();
+StringList names = new StringList();
 boolean highscoreUpdate = false;
 
 void setup() {
@@ -149,6 +151,12 @@ void setup() {
   highscores.append(0);
   highscores.append(0);
   highscores.append(0);
+  
+  names.append("N/A");
+  names.append("N/A");
+  names.append("N/A");
+  names.append("N/A");
+  names.append("N/A");
 }
 void draw() {
   
@@ -214,6 +222,7 @@ void draw() {
     if ((mouseX > 178 && mouseX < 422) && (mouseY > 227 && mouseY < 323)) {
       buttonSize = 1.03;
       if (mousePressed == true) {
+        playerName = Ask.forString("Enter Player Name");
         gameState = 1;
       }
     } else {
@@ -492,7 +501,7 @@ void draw() {
       enemyAction = "die";
     }  
     
-    
+     //<>//
     // ENEMY ANIMATION
     if (enemyAction == "run") {
       enemyAnimTick = (animTick / 32) % 4;
@@ -512,9 +521,7 @@ void draw() {
         enemyHealth = enemyMaxHealth;
         enemyAction = "run";
         enemyX = int(random(-1, 1) * 900);
-        if (enemyX != -900 || enemyX != 900) {
-          enemyX = 900;
-        }
+        println(enemyX);
       }
     }
   } else if (gameState == 2) {
@@ -549,6 +556,8 @@ void draw() {
     if (highscoreUpdate == false) {
       highscores.append(score);
       highscores.sortReverse();
+      int index = highscores.index(score);
+      names.insert(index, playerName);
       highscoreUpdate = true;
     }
     
@@ -581,6 +590,7 @@ void draw() {
     if ((mouseX > 278 && mouseX < 422) && (mouseY > 372 && mouseY < 458)) {
       buttonSize = 1.03;
       if (mousePressed == true) {
+        playerName = Ask.forString("Enter Player Name");
         gameState = 1;
         score = 0;
       }
@@ -657,28 +667,33 @@ void draw() {
     strokeWeight(12);
     fill(81, 29, 54);
     rect(100, 50, 700, 440, 10);
+    
+    // PRINT LEADERBOARD
     textSize(48);
     fill(0);
     text("Leaderboard", 450, 128);
     textSize(32);
-    text("1. " + highscores.get(0), 450, 178);
-    text("2. " + highscores.get(1), 450, 213);
-    text("3. " + highscores.get(2), 450, 248);
-    text("4. " + highscores.get(3), 450, 283);
-    text("5. " + highscores.get(4), 450, 318);
+    text("1.   " + names.get(0) + "   " + highscores.get(0), 450, 178);
+    text("2.   " + names.get(1) + "   " + highscores.get(1), 450, 213);
+    text("3.   " + names.get(2) + "   " + highscores.get(2), 450, 248);
+    text("4.   " + names.get(3) + "   " + highscores.get(3), 450, 283);
+    text("5.   " + names.get(4) + "   " + highscores.get(4), 450, 318);
     textSize(24);
     text("Press Q to Exit", 450, 463);
     textSize(48);
     fill(255);
     text("Leaderboard", 450, 125);
     textSize(32);
-    text("1. " + highscores.get(0), 450, 175);
-    text("2. " + highscores.get(1), 450, 210);
-    text("3. " + highscores.get(2), 450, 245);
-    text("4. " + highscores.get(3), 450, 280);
-    text("5. " + highscores.get(4), 450, 315);
+    text("1.   " + names.get(0) + "   " + highscores.get(0), 450, 175);
+    text("2.   " + names.get(1) + "   " + highscores.get(1), 450, 210);
+    text("3.   " + names.get(2) + "   " + highscores.get(2), 450, 245);
+    text("4.   " + names.get(3) + "   " + highscores.get(3), 450, 280);
+    text("5.   " + names.get(4) + "   " + highscores.get(4), 450, 315);
     textSize(24);
     text("Press Q to Exit", 450, 460);
+    
+    // LEADERBOARD TABLE
+    
     
     if (keyPressed == true && key == 'q') {
       gameState = 0;
