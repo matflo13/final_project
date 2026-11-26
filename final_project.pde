@@ -23,6 +23,7 @@ PImage play;
 PImage mainMenu;
 PImage settings;
 PImage leaderboard;
+PImage info;
 PImage player;
 PImage ground;
 PImage platform;
@@ -121,6 +122,7 @@ boolean highscoreUpdate = false;
 
 void setup() {
   size(900, 536);
+  
   // CUSTOM FONT
   pixelFont = createFont("Font/pixel.ttf", 24);
   textFont(pixelFont);
@@ -134,6 +136,7 @@ void setup() {
   mainMenu = loadImage("Home Screen/main-menu.png");
   settings = loadImage("Home Screen/settings.png");
   leaderboard = loadImage("Home Screen/leaderboard.png");
+  info = loadImage("Home Screen/info.png");
   
   // GAME IMAGES
   player = loadImage("Player/Run/player_run_90_0.png");
@@ -186,7 +189,7 @@ void draw() {
   
   // BACKGROUND
   background(61 + flash, 17 + flash, 41 + flash); // Background will update with the flash variable each time.
-  
+
   if (flash > 0) {
       flash -= 1; // If the bg brightness is brighter than the base bg color, change it by -2.
   } else if (flash < 0) {
@@ -217,18 +220,18 @@ void draw() {
     fill(49, 0, 34);
     textSize(24);
     fill(0);
-    text("Matteo Studios 2026.", 453, 508);
+    text("Matteo Studios 2026.", 453, 503);
     text("Lvl. " + level, 100, 53);
     textSize(18);
     text(xp + " XP", 100, 73);
-    text("Next Level: " + xpToNext, 105, 93);
+    text("Next Level: " + xpToNext + "XP", 105, 93);
     fill(255);
     textSize(24);
-    text("Matteo Studios 2026.", 450, 505);
+    text("Matteo Studios 2026.", 450, 500);
     text("Lvl. " + level, 100, 50);
     textSize(18);
     text(xp + " XP", 100, 70);
-    text("Next Level: " + xpToNext, 105, 90);
+    text("Next Level: " + xpToNext + "XP", 105, 90);
     
     // MAIN MENU GROUND SCROLLING
     
@@ -236,11 +239,8 @@ void draw() {
     groundAnimTick = (animTick / 9 % 16) + 1;
     
     // PLAY BUTTON
-    // For some reason, the hovering effects wouldn't work right when they were sorted with their collision code, so I had to move them around. That's why the leaderboard image is printed with the play button code for example.
-    
-    image(leaderboard, 850, 50, 244 * buttonSize, 96 * buttonSize);
-    
-    if ((mouseX > 478 && mouseX < 722) && (mouseY > 227 && mouseY < 323)) {
+
+    if ((mouseX > 178 && mouseX < 422) && (mouseY > 227 && mouseY < 323)) {
       buttonSize = 1.03;
       if (mousePressed == true) {
         playSfx(selectSfx);
@@ -249,31 +249,38 @@ void draw() {
     } else {
       buttonSize = 1.0;
     }    
+        
+    image(play, 300, 275, 244 * buttonSize, 96 * buttonSize);
     
-    // SETTINGS BUTTON
-
-    image(settings, 600, 275, 244 * buttonSize, 96 * buttonSize);
+    // INFO BUTTON
     
-    if ((mouseX > 178 && mouseX < 422) && (mouseY > 227 && mouseY < 323)) {
+    if ((mouseX > 826 && mouseX < 874) && (mouseY > 86 && mouseY < 134)) {
       buttonSize = 1.03;
       if (mousePressed == true) {
-        playSfx(startSfx);
-        homeMusic.stop();
-        playerName = Ask.forString("Enter Player Name");
-        if (playerName == null) {
-          gameState = 0;
-          playMusic(homeMusic, battleMusic, gameOverMusic);
-        } else {
-          gameState = 1;
-        }
+        playSfx(selectSfx);
+        gameState = 6;
       }
     } else {
       buttonSize = 1.0;
-    }    
+    } 
+    
+    image(info, 850, 110, 244 * buttonSize, 96 * buttonSize);
+    
+    // SETTINGS BUTTON
+
+    if ((mouseX > 478 && mouseX < 722) && (mouseY > 227 && mouseY < 323)) {
+      buttonSize = 1.03;
+      if (mousePressed == true) {
+        playSfx(selectSfx);
+        gameState = 3;
+      }
+    } else {
+      buttonSize = 1.0;
+    }       
+    
+    image(settings, 600, 275, 244 * buttonSize, 96 * buttonSize);
     
     // LEADERBOARD BUTTON
-    
-    image(play, 300, 275, 244 * buttonSize, 96 * buttonSize);
     
     if ((mouseX > 826 && mouseX < 874) && (mouseY > 26 && mouseY < 74)) {
       buttonSize = 1.05;
@@ -284,6 +291,8 @@ void draw() {
     } else {
       buttonSize = 1.0;
     }   
+    
+    image(leaderboard, 850, 50, 244 * buttonSize, 96 * buttonSize);
     
     // RESET VARIABLES
     // So that the game can reset the same way every time.
@@ -528,7 +537,7 @@ void draw() {
     // ENEMY DAMAGE CHECK
     
     if (isAttacking == true) {
-      if (playerDir == -90 && (distToPlayerX > 0 && distToPlayerX < 96) && (playerAnimTick > 3 && playerAnimTick < 7) && (distToPlayerY < 32 && distToPlayerY > -32)) { // If this is true, the enemy is being attacked from the right side.
+      if (playerDir == -90 && (distToPlayerX > 0 && distToPlayerX < 64) && (playerAnimTick > 3 && playerAnimTick < 7) && (distToPlayerY < 32 && distToPlayerY > -32)) { // If this is true, the enemy is being attacked from the right side.
         enemyAction = "damage";
         enemyDir = 90;
         enemyMomentum = -7;
@@ -539,7 +548,7 @@ void draw() {
         if (enemyHealth > 0) {
           enemyHealth -= int(random(1, 4));
         }
-      } else if (playerDir == 90 && (distToPlayerX < 0 && distToPlayerX > -96) && (playerAnimTick > 3 && playerAnimTick < 7) && (distToPlayerY < 32 && distToPlayerY > -32)) { // If this is true, the enemy is being attacked from the left side.
+      } else if (playerDir == 90 && (distToPlayerX < 0 && distToPlayerX > -64) && (playerAnimTick > 3 && playerAnimTick < 7) && (distToPlayerY < 32 && distToPlayerY > -32)) { // If this is true, the enemy is being attacked from the left side.
         enemyAction = "damage";
         enemyDir = -90;
         enemyMomentum = 15;
@@ -704,16 +713,9 @@ void draw() {
     textSize(48);
     fill(255);
     text("Volume", 450, 125);
-    text("How to Play", 450, 275);
     textSize(36);
     text("Music", 300, 200);
     text("SFX", 550, 200);
-    textSize(24);
-    text("A & D to move.", 450, 315);
-    text("W to jump.", 450, 340);
-    text("D to drop through platforms.", 450, 365);
-    text("Left-click to attack.", 450, 390);
-    text("Hold left-click down for a stronger swing.", 450, 415);
 
     // EXIT BUTTON
     image(exit, 765, 90, 128, 128);
@@ -793,14 +795,41 @@ void draw() {
     }
     
   } else if (gameState == 5) {
+    
+    // DEV LOGO/STARTUP SCREEN
+    
     background(0);
     wobble += 0.08; // Here is the link to the project if you want to see the effect in action. https://scratch.mit.edu/projects/921255622/
     image(devLogo, 450, 270 + (cos(wobble) * 4), 256, 256);
-    if (millis() < 2055) {
+    if (millis() < 2110) {
       playSfx(startSfx);
     }
     
     if (millis() > 5000) {
+      gameState = 0;
+    }
+  } else if (gameState == 6) {
+    
+    // SCREEN DESIGN
+    stroke(251, 191, 91);
+    strokeWeight(12);
+    fill(81, 29, 54);
+    rect(100, 50, 700, 440, 10);
+    textSize(48);
+    fill(255);
+    text("How to Play", 450, 175);
+    textSize(24);
+    text("A & D to move.", 450, 215);
+    text("W to jump.", 450, 240);
+    text("S to drop through platforms.", 450, 265);
+    text("Hold left-click to attack.", 450, 290);
+    text("Your attack will stop when you hit an enemy.", 450, 315);
+    text("Stop holding the mouse to regain your attack.", 450, 340);
+    
+    // EXIT BUTTON
+    image(exit, 765, 90, 128, 128);
+    if ((mouseX > 750 && mouseX < 777) && (mouseY > 75 && mouseY < 105) && (mousePressed == true)) { // Button collision bounds are slightly bigger than the actual button so that the player can click the button more easily.
+      playSfx(selectSfx);
       gameState = 0;
     }
   }
