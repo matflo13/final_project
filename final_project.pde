@@ -114,6 +114,7 @@ int xp = 0;
 int level = 1;
 int nextLevelUp = 100;
 boolean levelUp = false; 
+boolean pause = false;
 
 // Highscore List
 IntList highscores = new IntList();
@@ -244,7 +245,7 @@ void draw() {
       buttonSize = 1.03;
       if (mousePressed == true) {
         playSfx(selectSfx);
-        gameState = 3;
+        gameState = 1;
       }
     } else {
       buttonSize = 1.0;
@@ -310,289 +311,292 @@ void draw() {
     
   } else if (gameState == 1) {
     
-    highscoreUpdate = false;
-    vol.volume(0.5);
-    playMusic(battleMusic, homeMusic, gameOverMusic); // Play battle music
     
-    fill(250, 250, 250);
-    if (isAttacking == true) {
-      image(player, playerX, playerY, 100, 100);
-      image(effect, playerX + offset, playerY, 128, 100);
-    } else {
-      image(player, playerX, playerY, 60, 60);
-    }
-    image(enemy, enemyX, enemyY, 128, 128);
-    image(ground, 512 - (groundAnimTick * 2), 32, 1024, 1024);
-    image(platform, platformX, platformY, 180, 30);
-    textSize(24);
-    text(enemyHealth + " HP", enemyX, enemyY - 32);
-    text(playerHealth + " HP", playerX, playerY - 32);
-    textSize(32);
-    text("Score: " + score, 450, 100);
-    fill(255, 255, 255);
-    //rect(playerX - (playerWidth / 2), playerY - (playerHeight / 2), playerWidth, playerHeight); (PLAYER HITBOX) 
-    //rect(platformX - (platformWidth / 2), platformY - (platformHeight / 2), platformWidth, platformHeight); (PLATFORM HITBOX)
-    
-    // TICK SCROLLING
-    playerX -= 1; // Always moves the player to the left slowly to keep up with the scrolling ground.
-    enemyX -= 1; // Same for enemies.
-    platformX -= 1; // Same for the floating platform.
-    
-    // GRAVITY
-    gravity += 1; // Player falls faster the longer they are in the air.
-    playerY += gravity; // Updates the player's y value by gravity.
-    
-    // GROUND COLLISIONS
-    if (playerY >= groundHeight) { // If the player is touching the ground:
-      touchingGround = true;
-      isJumping = false; // Player is not jumping.
-      while (playerY >= groundHeight) { // Reset gravity and lift the player until the player isn't touching the ground.
-        gravity = 0; // Set gravity to 0
-        playerY -= 1; // Move the player up by 1y.
+    if (pause == false) {
+      highscoreUpdate = false;
+      vol.volume(0.5);
+      playMusic(battleMusic, homeMusic, gameOverMusic); // Play battle music
+      
+      fill(250, 250, 250);
+      if (isAttacking == true) {
+        image(player, playerX, playerY, 100, 100);
+        image(effect, playerX + offset, playerY, 128, 100);
+      } else {
+        image(player, playerX, playerY, 60, 60);
       }
-    }
-    
-    // PLATFORM COLLISIONS
-    int feet = playerY + (playerHeight / 2);
-    int left = playerX - (playerWidth / 2);
-    int right = playerX - (playerWidth / 2);
-    int platformTop = platformY - (platformHeight / 2);
-    int platformLeft = platformX - (platformWidth / 2) - 32;
-    int platformRight = platformX + (platformWidth / 2);
-    
-    //rect(left, head, playerWidth, playerHeight); 
-    //rect(platformLeft, platformTop, platformWidth, platformHeight);
-    //if ((feet > platformTop) && (right > platformLeft) && (left < platformRight) && (head < platformBottom)) {
-     // println("collision");
-   // }
-    if ((feet > platformTop) && (right > platformLeft) && (left < platformRight) && (gravity > 0)) {
-      touchingGround = true;
-      isJumping = false; // Player is not jumping.
-      if (key != 's') {
-        if (feet >= platformTop) { // Reset gravity and lift the player until the player isn't touching the ground.
+      image(enemy, enemyX, enemyY, 128, 128);
+      image(ground, 512 - (groundAnimTick * 2), 32, 1024, 1024);
+      image(platform, platformX, platformY, 180, 30);
+      textSize(24);
+      text(enemyHealth + " HP", enemyX, enemyY - 32);
+      text(playerHealth + " HP", playerX, playerY - 32);
+      textSize(32);
+      text("Score: " + score, 450, 100);
+      fill(255, 255, 255);
+      //rect(playerX - (playerWidth / 2), playerY - (playerHeight / 2), playerWidth, playerHeight); (PLAYER HITBOX) 
+      //rect(platformX - (platformWidth / 2), platformY - (platformHeight / 2), platformWidth, platformHeight); (PLATFORM HITBOX)
+      
+      // TICK SCROLLING
+      playerX -= 1; // Always moves the player to the left slowly to keep up with the scrolling ground.
+      enemyX -= 1; // Same for enemies.
+      platformX -= 1; // Same for the floating platform.
+      
+      // GRAVITY
+      gravity += 1; // Player falls faster the longer they are in the air.
+      playerY += gravity; // Updates the player's y value by gravity.
+      
+      // GROUND COLLISIONS
+      if (playerY >= groundHeight) { // If the player is touching the ground:
+        touchingGround = true;
+        isJumping = false; // Player is not jumping.
+        while (playerY >= groundHeight) { // Reset gravity and lift the player until the player isn't touching the ground.
           gravity = 0; // Set gravity to 0
           playerY -= 1; // Move the player up by 1y.
-        } 
+        }
       }
-    }
-    
-    // MOVEMENT CONTROLS
-    //I did movement in the draw loop since the keyPressed function was giving a delay when a key was clicked.
-    if ((keyPressed == true && key == 'w') && (touchingGround == true)) {
-      gravity -= 17;
-      isJumping = true; // Player is now jumping.
-      touchingGround = false;
-      playSfx(jumpSfx); // Only triggers when the player first jumps.
-    }
       
-    if (isJumping == false || gravity > 0) {
-      if (isAttacking == false) {
-        if ((keyPressed == true && key == 'a')) {
-          playerDir = -90;
-          if (playerMomentum > -8) {
-            playerMomentum -= 1;
-          }
-        } else if ((keyPressed == true && key == 'd')) {
-          playerDir = 90;
-          if (playerMomentum < 8) {
-            playerMomentum += 1;
-          }
-        } else if (abs(playerMomentum) < 0.5) {
-          playerMomentum = 0;
+      // PLATFORM COLLISIONS
+      int feet = playerY + (playerHeight / 2);
+      int left = playerX - (playerWidth / 2);
+      int right = playerX - (playerWidth / 2);
+      int platformTop = platformY - (platformHeight / 2);
+      int platformLeft = platformX - (platformWidth / 2) - 32;
+      int platformRight = platformX + (platformWidth / 2);
+      
+      //rect(left, head, playerWidth, playerHeight); 
+      //rect(platformLeft, platformTop, platformWidth, platformHeight);
+      //if ((feet > platformTop) && (right > platformLeft) && (left < platformRight) && (head < platformBottom)) {
+       // println("collision");
+     // }
+      if ((feet > platformTop) && (right > platformLeft) && (left < platformRight) && (gravity > 0)) {
+        touchingGround = true;
+        isJumping = false; // Player is not jumping.
+        if (key != 's') {
+          if (feet >= platformTop) { // Reset gravity and lift the player until the player isn't touching the ground.
+            gravity = 0; // Set gravity to 0
+            playerY -= 1; // Move the player up by 1y.
+          } 
         }
       }
-    }
-         
-    // OUT OF BOUNDS CHECKS
-    if (playerX < 0) {
-      playerMomentum = 10;
-      playerHealth -= 2;
-      playSfx(hitSfx);
-      flash = -20;
-    } else if (playerX > 900) {
-      playerMomentum = -10;
-      playerHealth -= 2;
-      playSfx(hitSfx);
-      flash = -20;
-    }
-    
-    // MOMENTUM CALCULATIONS
-    playerX += playerMomentum;
-    if (isJumping == false) {
-      playerMomentum = playerMomentum * 0.87;
-    }
-    // ANIMATIONS
-    /* 
-      playerAnimTick sets the frame of the animation to display the player at. It's done using the millis() function, dividing it by 4 to slow 
-      it down, and using modulus 4 (% 4) to make it constantly cycle through 4 values.
-    */
-    animTick = millis() / 4;
-    playerAnimTick = (animTick / 16) % playerAnimLength; 
-    groundAnimTick = (animTick / 9 % 16) + 1;
-    /*
-      Instead of loading the image right at the start, I do it every frame, while updating 
-      the frame number so that the animation updates on the screen.
-    */
-    
-    if (keyPressed == true && (key == 'a' || key == 'd' || keyCode == 37 || keyCode == 39) && gravity == 0 && isAttacking != true) {
-      if (playerAnimTick > 9) {
-        playerAnimTick = 0;
+      
+      // MOVEMENT CONTROLS
+      //I did movement in the draw loop since the keyPressed function was giving a delay when a key was clicked.
+      if ((keyPressed == true && key == 'w') && (touchingGround == true)) {
+        gravity -= 17;
+        isJumping = true; // Player is now jumping.
+        touchingGround = false;
+        playSfx(jumpSfx); // Only triggers when the player first jumps.
       }
-      offset = 0;
-      playerAnimLength = 10;
-      player = loadImage("Player/Run/player_run_" + playerDir + "_" + playerAnimTick + ".png");
-    } else if (gravity > 0) {
-      if (playerAnimTick > 9) {
-        playerAnimTick = 0;
+        
+      if (isJumping == false || gravity > 0) {
+        if (isAttacking == false) {
+          if ((keyPressed == true && key == 'a')) {
+            playerDir = -90;
+            if (playerMomentum > -8) {
+              playerMomentum -= 1;
+            }
+          } else if ((keyPressed == true && key == 'd')) {
+            playerDir = 90;
+            if (playerMomentum < 8) {
+              playerMomentum += 1;
+            }
+          } else if (abs(playerMomentum) < 0.5) {
+            playerMomentum = 0;
+          }
+        }
       }
-      offset = 0;
-      playerAnimLength = 10;
-      player = loadImage("Player/Fall/player_fall_" + playerDir + "_" + playerAnimTick + ".png");
-    } else if (gravity < 0) {
-      if (playerAnimTick > 12) {
-        playerAnimTick = 0;
+           
+      // OUT OF BOUNDS CHECKS
+      if (playerX < 0) {
+        playerMomentum = 10;
+        playerHealth -= 2;
+        playSfx(hitSfx);
+        flash = -20;
+      } else if (playerX > 900) {
+        playerMomentum = -10;
+        playerHealth -= 2;
+        playSfx(hitSfx);
+        flash = -20;
       }
-      offset = 0;
-      playerAnimLength = 13;
-      player = loadImage("Player/Jump/player_jump_" + playerDir + "_" + playerAnimTick + ".png");
-    } else if (startAttack == true) {
-      if (isAttacking == false) {
-        playerAnimTick = 0;
-        isAttacking = true;
+      
+      // MOMENTUM CALCULATIONS
+      playerX += playerMomentum;
+      if (isJumping == false) {
+        playerMomentum = playerMomentum * 0.87;
       }
-      if (playerAnimTick > 7) {
-        playerAnimTick = 0;
-      }
-      offset = (playerDir / 90 * 64);
-      playerAnimLength = 8;
-      player = loadImage("Player/Attack/player_attack_" + playerDir + "_" + playerAnimTick + ".png");
-      effect = loadImage("Player/FX/attack_effect_" + effectNum + "_" + playerDir + "_" + playerAnimTick + ".png");
-    } else {
-      offset = 0;
-      playerAnimLength = 24;
-      player = loadImage("Player/Idle/player_idle_" + playerDir + "_" + playerAnimTick + ".png");
-    }     
-    
-    // ATTACK RESET
-    // Makes it so that the player can't just continously hold the mouse down to attack the enemy.
-    if (enemyAction == "die" || enemyAction == "damage") {
-      isAttacking = false;
-      startAttack = false;
-    }
-    
-    // PLAYER DEATH CHECK
-    
-    if (playerHealth == 0) {
-      gameState = 2;
-      playSfx(explosionSfx);
-    }
-    
-    // PLATFORM SPAWNING
-    
-    if (platformX < -160) {
-      platformX = 1000;
-      platformY = int(random(304, 368));
-    }
-    
-    // ENEMY MOVEMENT
-    
-    int distToPlayerX;
-    int distToPlayerY;
-    distToPlayerX = playerX - enemyX;
-    distToPlayerY = playerY - enemyY;
-    enemyX += enemyMomentum;
-    if ((distToPlayerX < -3 || distToPlayerX > 3) && enemyDamageTick <= 0) {
-      if (distToPlayerX < 0) {
-        enemyMomentum = 0 - enemyMaxSpeed;
-        enemyDir = -90;
-        enemyAction = "run";
+      // ANIMATIONS
+      /* 
+        playerAnimTick sets the frame of the animation to display the player at. It's done using the millis() function, dividing it by 4 to slow 
+        it down, and using modulus 4 (% 4) to make it constantly cycle through 4 values.
+      */
+      animTick = millis() / 4;
+      playerAnimTick = (animTick / 16) % playerAnimLength; 
+      groundAnimTick = (animTick / 9 % 16) + 1;
+      /*
+        Instead of loading the image right at the start, I do it every frame, while updating 
+        the frame number so that the animation updates on the screen.
+      */
+      
+      if (keyPressed == true && (key == 'a' || key == 'd' || keyCode == 37 || keyCode == 39) && gravity == 0 && isAttacking != true) {
+        if (playerAnimTick > 9) {
+          playerAnimTick = 0;
+        }
+        offset = 0;
+        playerAnimLength = 10;
+        player = loadImage("Player/Run/player_run_" + playerDir + "_" + playerAnimTick + ".png");
+      } else if (gravity > 0) {
+        if (playerAnimTick > 9) {
+          playerAnimTick = 0;
+        }
+        offset = 0;
+        playerAnimLength = 10;
+        player = loadImage("Player/Fall/player_fall_" + playerDir + "_" + playerAnimTick + ".png");
+      } else if (gravity < 0) {
+        if (playerAnimTick > 12) {
+          playerAnimTick = 0;
+        }
+        offset = 0;
+        playerAnimLength = 13;
+        player = loadImage("Player/Jump/player_jump_" + playerDir + "_" + playerAnimTick + ".png");
+      } else if (startAttack == true) {
+        if (isAttacking == false) {
+          playerAnimTick = 0;
+          isAttacking = true;
+        }
+        if (playerAnimTick > 7) {
+          playerAnimTick = 0;
+        }
+        offset = (playerDir / 90 * 64);
+        playerAnimLength = 8;
+        player = loadImage("Player/Attack/player_attack_" + playerDir + "_" + playerAnimTick + ".png");
+        effect = loadImage("Player/FX/attack_effect_" + effectNum + "_" + playerDir + "_" + playerAnimTick + ".png");
       } else {
-        enemyMomentum = enemyMaxSpeed + 2;
-        enemyDir = 90;
-        enemyAction = "run";
+        offset = 0;
+        playerAnimLength = 24;
+        player = loadImage("Player/Idle/player_idle_" + playerDir + "_" + playerAnimTick + ".png");
+      }     
+      
+      // ATTACK RESET
+      // Makes it so that the player can't just continously hold the mouse down to attack the enemy.
+      if (enemyAction == "die" || enemyAction == "damage") {
+        isAttacking = false;
+        startAttack = false;
       }
-    } else {
-      if ((distToPlayerY > -32 && distToPlayerY < 32) && enemyDamageTick <= 0) {
+      
+      // PLAYER DEATH CHECK
+      
+      if (playerHealth == 0) {
+        gameState = 2;
+        playSfx(explosionSfx);
+      }
+      
+      // PLATFORM SPAWNING
+      
+      if (platformX < -160) {
+        platformX = 1000;
+        platformY = int(random(304, 368));
+      }
+      
+      // ENEMY MOVEMENT
+      
+      int distToPlayerX;
+      int distToPlayerY;
+      distToPlayerX = playerX - enemyX;
+      distToPlayerY = playerY - enemyY;
+      enemyX += enemyMomentum;
+      if ((distToPlayerX < -3 || distToPlayerX > 3) && enemyDamageTick <= 0) {
+        if (distToPlayerX < 0) {
+          enemyMomentum = 0 - enemyMaxSpeed;
+          enemyDir = -90;
+          enemyAction = "run";
+        } else {
+          enemyMomentum = enemyMaxSpeed + 2;
+          enemyDir = 90;
+          enemyAction = "run";
+        }
+      } else {
+        if ((distToPlayerY > -32 && distToPlayerY < 32) && enemyDamageTick <= 0) {
+          enemyMomentum = 0;
+          enemyAction = "attack";
+          playSfx(hitSfx);
+          if (enemyAnimTick > 2) {
+            playerHealth -= 1;
+            flash = -10;
+            if (playerHealth < 1) {
+              playerHealth = 0;
+            }
+          }
+        } if (enemyDamageTick > 0) {
+          enemyAction = "damage";
+        }
+      }
+      
+      if (abs(enemyMomentum) < 0.5) {
         enemyMomentum = 0;
-        enemyAction = "attack";
-        playSfx(hitSfx);
-        if (enemyAnimTick > 2) {
-          playerHealth -= 1;
-          flash = -10;
-          if (playerHealth < 1) {
-            playerHealth = 0;
+      }
+      enemyMomentum = enemyMomentum * 0.75;
+      enemyDamageTick -= 1;
+      
+      // ENEMY DAMAGE CHECK
+      
+      if (isAttacking == true) {
+        if (playerDir == -90 && (distToPlayerX > 0 && distToPlayerX < 64) && (playerAnimTick > 3 && playerAnimTick < 7) && (distToPlayerY < 32 && distToPlayerY > -32)) { // If this is true, the enemy is being attacked from the right side.
+          enemyAction = "damage";
+          enemyDir = 90;
+          enemyMomentum = -7;
+          enemyDamageTick = 30;
+          flash = 10;
+          score += 300;
+          playSfx(hitSfx);
+          if (enemyHealth > 0) {
+            enemyHealth -= int(random(1, 4));
+          }
+        } else if (playerDir == 90 && (distToPlayerX < 0 && distToPlayerX > -64) && (playerAnimTick > 3 && playerAnimTick < 7) && (distToPlayerY < 32 && distToPlayerY > -32)) { // If this is true, the enemy is being attacked from the left side.
+          enemyAction = "damage";
+          enemyDir = -90;
+          enemyMomentum = 15;
+          enemyDamageTick = 30;
+          flash = 10;
+          score += 300;
+          playSfx(hitSfx);
+          if (enemyHealth > 0) {
+            enemyHealth -= int(random(1, 4));
           }
         }
-      } if (enemyDamageTick > 0) {
-        enemyAction = "damage";
       }
-    }
-    
-    if (abs(enemyMomentum) < 0.5) {
-      enemyMomentum = 0;
-    }
-    enemyMomentum = enemyMomentum * 0.75;
-    enemyDamageTick -= 1;
-    
-    // ENEMY DAMAGE CHECK
-    
-    if (isAttacking == true) {
-      if (playerDir == -90 && (distToPlayerX > 0 && distToPlayerX < 64) && (playerAnimTick > 3 && playerAnimTick < 7) && (distToPlayerY < 32 && distToPlayerY > -32)) { // If this is true, the enemy is being attacked from the right side.
-        enemyAction = "damage";
-        enemyDir = 90;
-        enemyMomentum = -7;
-        enemyDamageTick = 30;
-        flash = 10;
-        score += 300;
-        playSfx(hitSfx);
-        if (enemyHealth > 0) {
-          enemyHealth -= int(random(1, 4));
-        }
-      } else if (playerDir == 90 && (distToPlayerX < 0 && distToPlayerX > -64) && (playerAnimTick > 3 && playerAnimTick < 7) && (distToPlayerY < 32 && distToPlayerY > -32)) { // If this is true, the enemy is being attacked from the left side.
-        enemyAction = "damage";
-        enemyDir = -90;
-        enemyMomentum = 15;
-        enemyDamageTick = 30;
-        flash = 10;
-        score += 300;
-        playSfx(hitSfx);
-        if (enemyHealth > 0) {
-          enemyHealth -= int(random(1, 4));
+      
+      // ENEMY DEATH CHECK
+      
+      if (enemyHealth <= 0) {
+        enemyMomentum = 0;
+        score += 100;
+        playSfx(explosionSfx);
+        enemyAction = "die";
+      }  
+      
+      
+      // ENEMY ANIMATION
+      if (enemyAction == "run") {
+        enemyAnimTick = (animTick / 32) % 4;
+        enemy = loadImage("Enemy/Golem/Run/enemy" + "_run_" + enemyDir + "_" + enemyAnimTick + ".png");
+      } else if (enemyAction == "attack") {
+        enemyAnimTick = (animTick / 16) % 10;
+        enemy = loadImage("Enemy/Golem/Attack/enemy" + "_attack_" + enemyDir + "_" + enemyAnimTick + ".png");
+      } else if (enemyDamageTick > 0) {
+        enemyAnimTick = (animTick / 32) % 5;
+        enemy = loadImage("Enemy/Golem/Damage/enemy" + "_damage_" + enemyDir + "_" + enemyAnimTick + ".png");
+      } else if (enemyAction == "die") {
+        enemyAnimTick = (animTick / 32) % 6;
+        enemy = loadImage("Enemy/Golem/Death/" + "effect_explosion_" + enemyAnimTick + ".png");
+        if (enemyAnimTick == 5) {
+          enemyMaxSpeed += 0.5;
+          enemyMaxHealth += int(random(5, 10));
+          enemyHealth = enemyMaxHealth;
+          enemyAction = "run";
+          enemyX = (int(random(0, 1)) * 900);
         }
       }
-    }
-    
-    // ENEMY DEATH CHECK
-    
-    if (enemyHealth <= 0) {
-      enemyMomentum = 0;
-      score += 100;
-      playSfx(explosionSfx);
-      enemyAction = "die";
     }  
-    
-    
-    // ENEMY ANIMATION
-    if (enemyAction == "run") {
-      enemyAnimTick = (animTick / 32) % 4;
-      enemy = loadImage("Enemy/Golem/Run/enemy" + "_run_" + enemyDir + "_" + enemyAnimTick + ".png");
-    } else if (enemyAction == "attack") {
-      enemyAnimTick = (animTick / 16) % 10;
-      enemy = loadImage("Enemy/Golem/Attack/enemy" + "_attack_" + enemyDir + "_" + enemyAnimTick + ".png");
-    } else if (enemyDamageTick > 0) {
-      enemyAnimTick = (animTick / 32) % 5;
-      enemy = loadImage("Enemy/Golem/Damage/enemy" + "_damage_" + enemyDir + "_" + enemyAnimTick + ".png");
-    } else if (enemyAction == "die") {
-      enemyAnimTick = (animTick / 32) % 6;
-      enemy = loadImage("Enemy/Golem/Death/" + "effect_explosion_" + enemyAnimTick + ".png");
-      if (enemyAnimTick == 5) {
-        enemyMaxSpeed += 0.5;
-        enemyMaxHealth += int(random(5, 10));
-        enemyHealth = enemyMaxHealth;
-        enemyAction = "run";
-        enemyX = (int(random(0, 1)) * 900);
-      }
-    }
   } else if (gameState == 2) {
     
     vol.volume(1.0);
@@ -674,6 +678,7 @@ void draw() {
     playerY = 320;
     playerDir = 90;
     playerMomentum = 0;
+    pause = false;
     
     // PLAY BUTTON
     image(play, 300, 410, 244 * buttonSize, 96 * buttonSize);
